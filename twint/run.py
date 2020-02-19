@@ -1,5 +1,5 @@
 import sys, os, time
-from asyncio import get_event_loop, TimeoutError, ensure_future, new_event_loop, set_event_loop
+from asyncio import get_event_loop, TimeoutError, ensure_future, new_event_loop, set_event_loop, sleep
 from datetime import datetime
 
 from . import datelock, feed, get, output, verbose, storage
@@ -83,14 +83,17 @@ class Twint:
                     logme.critical(__name__+':Twint:Feed:' + str(e))
                     print(str(e))
                     break
+                ##############################this is where it goes wrong
             except Exception as e:
                 if self.config.Profile or self.config.Favorites:
                     print("[!] Twitter does not return more data, scrape stops here.")
                     break
+                #############################################
                 logme.critical(__name__+':Twint:Feed:noData' + str(e))
                 # Sometimes Twitter says there is no data. But it's a lie.
                 consecutive_errors_count += 1
                 if consecutive_errors_count < self.config.Retries_count:
+                    await sleep(10)
                     self.user_agent = await get.RandomUserAgent()
                     continue
                 logme.critical(__name__+':Twint:Feed:Tweets_known_error:' + str(e))
@@ -278,6 +281,7 @@ def Profile(config):
         storage.panda._autoget("tweet")
 
 def Search(config, callback=None):
+    print("hi from twint")
     logme.debug(__name__+':Search')
     config.TwitterSearch = True
     config.Favorites = False
